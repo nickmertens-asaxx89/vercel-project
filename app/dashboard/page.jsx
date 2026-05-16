@@ -8,29 +8,64 @@ export default function Overview() {
   const [expenses, setExpenses] = useState([])
 
   useEffect(() => {
-    load()
+    loadExpenses()
   }, [])
 
-  async function load() {
-    const { data } = await supabase.from("expenses").select("*")
+  async function loadExpenses() {
+    const { data } = await supabase
+      .from("expenses")
+      .select("*")
+
     setExpenses(data || [])
   }
 
-  const total = expenses.reduce((a, b) => a + Number(b.amount), 0)
+  const total = expenses.reduce(
+    (sum, expense) => sum + Number(expense.amount),
+    0
+  )
+
+  const average =
+    expenses.length > 0
+      ? total / expenses.length
+      : 0
 
   return (
     <div>
-      <h1 style={{ marginBottom: 20 }}>Overview</h1>
+      <h1 style={titleStyle}>Overview</h1>
 
-      <div style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(3, 1fr)",
-        gap: 20
-      }}>
-        <Card title="Total spent" value={`€${total.toFixed(2)}`} />
-        <Card title="Transactions" value={expenses.length} />
-        <Card title="Avg expense" value={`€${(total / (expenses.length || 1)).toFixed(2)}`} />
+      {/* RESPONSIVE GRID */}
+      <div style={gridStyle}>
+        <Card
+          title="Total Spent"
+          value={`€${total.toFixed(2)}`}
+        />
+
+        <Card
+          title="Transactions"
+          value={expenses.length}
+        />
+
+        <Card
+          title="Average Expense"
+          value={`€${average.toFixed(2)}`}
+        />
       </div>
     </div>
   )
+}
+
+/* STYLES */
+
+const titleStyle = {
+  marginBottom: 20,
+}
+
+const gridStyle = {
+  display: "grid",
+
+  // MAGIC RESPONSIVE LINE
+  gridTemplateColumns:
+    "repeat(auto-fit, minmax(220px, 1fr))",
+
+  gap: 20,
 }
