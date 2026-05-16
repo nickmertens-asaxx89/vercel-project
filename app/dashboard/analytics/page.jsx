@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { supabase } from "@/lib/supabase"
 
 import {
@@ -27,6 +27,12 @@ const COLORS = [
 export default function AnalyticsPage() {
   const [expenses, setExpenses] = useState([])
 
+  // CURRENT MONTH
+  const currentMonth = new Date().getMonth()
+
+  const [selectedMonth, setSelectedMonth] =
+    useState(currentMonth)
+
   useEffect(() => {
     loadExpenses()
   }, [])
@@ -40,10 +46,19 @@ export default function AnalyticsPage() {
     setExpenses(data || [])
   }
 
+  // FILTERED EXPENSES
+  const filteredExpenses = useMemo(() => {
+    return expenses.filter((expense) => {
+      const date = new Date(expense.created_at)
+
+      return date.getMonth() === selectedMonth
+    })
+  }, [expenses, selectedMonth])
+
   // CATEGORY BREAKDOWN
   const categoryMap = {}
 
-  expenses.forEach((expense) => {
+  filteredExpenses.forEach((expense) => {
     const category = expense.category || "General"
 
     if (!categoryMap[category]) {
@@ -60,8 +75,8 @@ export default function AnalyticsPage() {
     })
   )
 
-  // TREND DATA
-  const lineData = expenses.map((expense) => ({
+  // LINE DATA
+  const lineData = filteredExpenses.map((expense) => ({
     date: new Date(
       expense.created_at
     ).toLocaleDateString(),
@@ -69,16 +84,69 @@ export default function AnalyticsPage() {
     amount: Number(expense.amount),
   }))
 
+  // KPI CALCULATIONS
+  const totalSpent = filteredExpenses.reduce(
+    (sum, expense) =>
+      sum + Number(expense.amount),
+    0
+  )
+
+  const avgExpense =
+    filteredExpenses.length > 0
+      ? totalSpent / filteredExpenses.length
+      : 0
+
   return (
     <div style={pageStyle}>
 
-      <h1 style={titleStyle}>
-        Analytics
-      </h1>
+      {/* HEADER */}
+      <div style={headerStyle}>
 
+        <h1 style={{ margin: 0 }}>
+          Analytics
+        </h1>
+
+        {/* MONTH SELECT */}
+        <select
+          value={selectedMonth}
+          onChange={(e) =>
+            setSelectedMonth(Number(e.target.value))
+          }
+          style={selectStyle}
+        >
+          {MONTHS.map((month, index) => (
+            <option key={month} value={index}>
+              {month}
+            </option>
+          ))}
+        </select>
+
+      </div>
+
+      {/* KPI CARDS */}
+      <div style={kpiGridStyle}>
+
+        <KpiCard
+          title="Total Spent"
+          value={`€${totalSpent.toFixed(2)}`}
+        />
+
+        <KpiCard
+          title="Transactions"
+          value={filteredExpenses.length}
+        />
+
+        <KpiCard
+          title="Average Expense"
+          value={`€${avgExpense.toFixed(2)}`}
+        />
+
+      </div>
+
+      {/* CHART GRID */}
       <div style={gridStyle}>
 
-        {/* PIE CHART */}
+        {/* PIE */}
         <div style={cardStyle}>
 
           <h3 style={chartTitle}>
@@ -117,7 +185,7 @@ export default function AnalyticsPage() {
           </div>
         </div>
 
-        {/* LINE CHART */}
+        {/* LINE */}
         <div style={cardStyle}>
 
           <h3 style={chartTitle}>
@@ -158,6 +226,39 @@ export default function AnalyticsPage() {
   )
 }
 
+/* KPI CARD */
+
+function KpiCard({ title, value }) {
+  return (
+    <div style={kpiCardStyle}>
+      <p style={kpiTitleStyle}>
+        {title}
+      </p>
+
+      <h2 style={kpiValueStyle}>
+        {value}
+      </h2>
+    </div>
+  )
+}
+
+/* MONTHS */
+
+const MONTHS = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+]
+
 /* STYLES */
 
 const pageStyle = {
@@ -165,8 +266,43 @@ const pageStyle = {
   minWidth: 0,
 }
 
-const titleStyle = {
+const headerStyle = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  gap: 20,
+  flexWrap: "wrap",
   marginBottom: 20,
+}
+
+const selectStyle = {
+  padding: "10px 14px",
+  borderRadius: 10,
+  border: "1px solid #ddd",
+}
+
+const kpiGridStyle = {
+  display: "grid",
+  gridTemplateColumns:
+    "repeat(auto-fit, minmax(220px, 1fr))",
+  gap: 20,
+  marginBottom: 20,
+}
+
+const kpiCardStyle = {
+  background: "white",
+  padding: 20,
+  borderRadius: 12,
+  border: "1px solid #eee",
+}
+
+const kpiTitleStyle = {
+  margin: 0,
+  color: "#666",
+}
+
+const kpiValueStyle = {
+  marginBottom: 0,
 }
 
 const gridStyle = {
@@ -186,7 +322,6 @@ const cardStyle = {
   borderRadius: 12,
   padding: 20,
   border: "1px solid #eee",
-
   minWidth: 0,
 }
 
@@ -198,7 +333,5 @@ const chartTitle = {
 const chartWrapperStyle = {
   width: "100%",
   height: 300,
-
-  // VERY IMPORTANT FIX
   minWidth: 0,
 }
