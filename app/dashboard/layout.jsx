@@ -27,7 +27,7 @@ export default function DashboardLayout({ children }) {
       }}>
         
         <div>
-          <h2 style={{ marginBottom: 30 }}>💰 Expense SaaS</h2>
+          <h2 style={{ marginBottom: 30 }}>Expense Tracker</h2>
 
           <nav style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             <NavItem href="/dashboard" label="Overview" />

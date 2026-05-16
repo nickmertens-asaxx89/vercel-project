@@ -11,7 +11,7 @@ export default function LandingPage() {
       <div style={styles.container}>
 
         <h1 style={styles.title}>
-          Expense Tracker SaaS
+          Expense Tracker
         </h1>
 
         <p style={styles.subtitle}>
