@@ -2,118 +2,35 @@
 
 import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabase"
-import { useRouter } from "next/navigation"
+import Card from "@/components/Card"
 
-export default function Dashboard() {
-  const router = useRouter()
-
-  const [user, setUser] = useState(null)
+export default function Overview() {
   const [expenses, setExpenses] = useState([])
 
-  const [title, setTitle] = useState("")
-  const [amount, setAmount] = useState("")
-  const [category, setCategory] = useState("General")
-
   useEffect(() => {
-    init()
+    load()
   }, [])
 
-  async function init() {
-    const { data } = await supabase.auth.getUser()
-
-    if (!data.user) {
-      router.push("/login")
-      return
-    }
-
-    setUser(data.user)
-    loadExpenses(data.user.id)
-  }
-
-  async function loadExpenses(userId) {
-    const { data } = await supabase
-      .from("expenses")
-      .select("*")
-      .order("created_at", { ascending: false })
-
+  async function load() {
+    const { data } = await supabase.from("expenses").select("*")
     setExpenses(data || [])
   }
 
-  async function addExpense() {
-    if (!title || !amount) return
-
-    await supabase.from("expenses").insert({
-      user_id: user.id,
-      title,
-      amount: Number(amount),
-      category,
-    })
-
-    setTitle("")
-    setAmount("")
-    loadExpenses(user.id)
-  }
-
-  async function logout() {
-    await supabase.auth.signOut()
-    router.push("/login")
-  }
-
-  const total = expenses.reduce(
-    (sum, e) => sum + Number(e.amount),
-    0
-  )
-
-  if (!user) return <p>Loading...</p>
+  const total = expenses.reduce((a, b) => a + Number(b.amount), 0)
 
   return (
-    <div style={{ padding: 20 }}>
-      <h1>Expense Tracker</h1>
-      <p>Logged in as {user.email}</p>
+    <div>
+      <h1 style={{ marginBottom: 20 }}>Overview</h1>
 
-      <button onClick={logout}>Logout</button>
-
-      <hr />
-
-      <h2>Total spent: €{total.toFixed(2)}</h2>
-
-      <h3>Add expense</h3>
-
-      <input
-        placeholder="title"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-      />
-
-      <input
-        placeholder="amount"
-        type="number"
-        value={amount}
-        onChange={(e) => setAmount(e.target.value)}
-      />
-
-      <select
-        value={category}
-        onChange={(e) => setCategory(e.target.value)}
-      >
-        <option>General</option>
-        <option>Food</option>
-        <option>Transport</option>
-        <option>Entertainment</option>
-        <option>Rent</option>
-      </select>
-
-      <button onClick={addExpense}>Add</button>
-
-      <hr />
-
-      <h3>Expenses</h3>
-
-      {expenses.map((e) => (
-        <div key={e.id}>
-          {e.title} — €{e.amount} ({e.category})
-        </div>
-      ))}
+      <div style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(3, 1fr)",
+        gap: 20
+      }}>
+        <Card title="Total spent" value={`€${total.toFixed(2)}`} />
+        <Card title="Transactions" value={expenses.length} />
+        <Card title="Avg expense" value={`€${(total / (expenses.length || 1)).toFixed(2)}`} />
+      </div>
     </div>
   )
 }
