@@ -107,6 +107,7 @@ export default function Expenses() {
         >
           <option value="General">General</option>
           <option value="Food">Food</option>
+          <option value="Music">Music</option>
           <option value="Transport">Transport</option>
           <option value="Entertainment">Entertainment</option>
           <option value="Rent">Rent</option>
