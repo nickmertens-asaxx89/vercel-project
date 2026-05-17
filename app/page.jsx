@@ -27,6 +27,15 @@ export default function LandingPage() {
           </button>
         </div>
 
+        <div style={{ display: "flex", justifyContent: "center",  gap: 10 }}>
+          <button
+            onClick={() => router.push("/privacy")}
+            style={styles.secondaryBtn}
+          >
+            Privacy Agreement
+          </button>
+        </div>
+
       </div>
 
     </div>
